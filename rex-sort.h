@@ -33,46 +33,90 @@ template <typename T, typename T_>
 class DoublyLinkedList
 {
     int64_t size;
-    DLL_Node_ptr head; DLL_Node_ptr mid; DLL_Node_ptr tail;
-public:
-    DoublyLinkedList(): size(0), head(NULL), tail(NULL), mid(NULL) {;}
-    DoublyLinkedList(T_ list)
-    {
-        if(list.size() < 3)
-            throw UserException("List of insufficient size.", "", 0)
-        size = 2;
-        head = new DoublyLinkedListNode<T>(*(list.begin()));
-        tail = new DoublyLinkedListNode<T>(*(list.begin()+1));
-        head->set_right(tail);
-        tail->set_left(head);
-        for(auto i=list.begin()+2; i!=list.end(); ++i, ++size)
-        {
-            DLL_Node_ptr node = new DoublyLinkedListNode<T>(*i);
-            node->insert_in_between(tail, NULL);
-        }
-        int mid_index = size/2;
-        DLL_Node_ptr temp_node = head;
-        while(mid_index--)
-            temp_node = temp_node->get_right();
-        mid = temp_node;
-    }
+    DLL_Node_ptr head; DLL_Node_ptr mid;
+    DLL_Node_ptr tail; DLL_Node_ptr last;
+    // void sort_insert_util_v1(
+    //     DLL_Node_ptr node,
+    //     DLL_Node_ptr start
+    // )
+    // {
+    //     while(start->get_data() <= node->get_data())
+    //         start = start->get_right();
+    //     if(start->get_data() <= node->get_data())
+    //         node->insert_in_between(start, start->get_right());
+    //     else
+    //         node->insert_in_between(start->get_left(), start);
+    // }
+    // void sort_insert_util_v2(
+    //     DLL_Node_ptr node,
+    //     DLL_Node_ptr start,
+    //     DLL_Node_ptr end
+    // )
+    // {
+    //     while(node->get_data() > start->get_data())
+    //             start = start->get_right();
+    //     while(node->get_data() < end->get_data())
+    //             end = end->get_left();
+    //     if(start == end)
+    //         if(start->get_data() < node->get_data() &&
+    //            start->get_right()->get_data() > node->get_data())
+    //             node->insert_in_between(start, start->get_right());
+    //         else
+    //             node->insert_in_between(start->get_left(), start);
+    //     else
+    //         node->insert_in_between(end, start);
+    // }
     void sort_insert_util(
         DLL_Node_ptr node,
-        DLL_Node_ptr start
+        DLL_Node_ptr start,
+        DLL_Node_ptr end
     )
     {
-        while(start->get_data() < node->get_data())
+        while(node->get_data() > start->get_data() &&
+              node->get_data() < end->get_data())
+        {
             start = start->get_right();
-        if(start->get_data() < node->get_data())
-            node->insert_in_between(start, start->get_right());
+            end = end->get_left();
+        }   
+        end = (
+            !(node->get_data() > start->get_data()) &&
+            node->get_data() < end->get_data()
+        )? start : end;
+        if(end->get_data() <= node->get_data())
+            node->insert_in_between(end, end->get_right());
         else
-            node->insert_in_between(start->get_left(), start);
+            node->insert_in_between(end->get_left(), end);
     }
+public:
+    DoublyLinkedList():
+        size(0),
+        head(NULL), tail(NULL),
+        mid(NULL), last(NULL) {;}
+    // DoublyLinkedList(T_ list)
+    // {
+    //     if(list.size() < 3)
+    //         throw UserException("List of insufficient size.", __FILE__, __LINE__);
+    //     size = 2;
+    //     head = new DoublyLinkedListNode<T>(*(list.begin()));
+    //     tail = new DoublyLinkedListNode<T>(*(list.begin()+1));
+    //     head->set_right(tail);
+    //     tail->set_left(head);
+    //     for(auto i=list.begin()+2; i!=list.end(); ++i, ++size)
+    //     {
+    //         DLL_Node_ptr node = new DoublyLinkedListNode<T>(*i);
+    //         node->insert_in_between(tail, NULL);
+    //     }
+    //     int mid_index = size/2;
+    //     DLL_Node_ptr temp_node = head;
+    //     while(mid_index--)
+    //         temp_node = temp_node->get_right();
+    //     mid = temp_node;
+    // }
     void sort_insert(const T& data)
     {
         DLL_Node_ptr node = new DoublyLinkedListNode<T>(data);
         if(head == NULL)
-            head = tail = mid = node;
+            head = tail = mid = last = node;
         else if(data >= tail->get_data())
         {
             node->insert_in_between(tail, NULL);
@@ -87,15 +131,29 @@ public:
         }
         else if(data == mid->get_data())
             node->insert_in_between(mid, mid->get_right());
-        else if(data < mid->get_data())
+        else if(data > mid->get_data())// head---mid--data--tail
         {
-            sort_insert_util(node, mid);
-            mid = mid->get_left();
-        }
-        else
-        {
-            sort_insert_util(node, head);
+            if(last->get_data() > mid->get_data())// head---mid--last--tail
+                if(data < last->get_data())// head---mid--data-last-tail
+                    sort_insert_util(node, mid, last);
+                else// head---mid--last-data-tail
+                    sort_insert_util(node, last, tail);
+            else// head---last--mid--data--tail
+                sort_insert_util(node, mid, tail);
             mid = mid->get_right();
+            last = node;
+        }
+        else// head--data--mid---tail
+        {
+            if(last->get_data() < mid->get_data())// head---last--mid--tail
+                if(data < last->get_data())// head-data-last-mid---tail
+                    sort_insert_util(node, head, last);
+                else// head--last-data--mid---tail
+                    sort_insert_util(node, last, mid);
+            else// head---data--mid--last--tail
+                sort_insert_util(node, head, mid);
+            mid = mid->get_left();
+            last = node;
         }
         ++size;
     }
@@ -112,32 +170,34 @@ public:
         }
         return ans;
     }
+
+    DLL_Node_ptr get_head() { return head;}
 };
 #undef DLL_Node_ptr
+
+TEMPLATE_INIT
+VEC rex_sort(VEC original_array)
+{
+    DoublyLinkedList<T, VEC> arr;
+    for(T i : original_array)
+        arr.sort_insert(i);
+    return arr.compile_answer();
+}
 
 TEMPLATE_INIT // Vector printer
 std::ostream& operator<<(std::ostream& os, VEC& obj)
 {
     std::cout<<std::endl<<"[";
-    for(auto i:obj)
+    for(T i:obj)
         std::cout<<i<<", ";   
     std::cout<<"]"<<std::endl;
     return os;
 }
 
-TEMPLATE_INIT
-VEC rex_sort(VEC& original_array)
-{
-    DoublyLinkedList<T, VEC> arr;
-    for(auto i : original_array)
-        arr.sort_insert(i);
-    return arr.compile_answer();
-}
-
 // Doubly Linked List printer
 std::ostream& operator<<(std::ostream& os, DLL_AUTO_AUTO& obj)
 {
-    auto head_ = obj.head;
+    auto head_ = obj.get_head();
     std::cout<<std::endl<<"[";
     while(head_ != NULL)
     {
@@ -147,5 +207,8 @@ std::ostream& operator<<(std::ostream& os, DLL_AUTO_AUTO& obj)
     std::cout<<"]"<<std::endl;
     return os;
 }
-
-
+#undef VEC
+#undef DLL_Node_ptr 
+#undef LIST_INIT_TYPE
+#undef DLL_AUTO_AUTO
+#undef TEMPLATE_INIT
