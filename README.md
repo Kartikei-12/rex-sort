@@ -10,8 +10,7 @@ Sorting algorithm using Doubly Linked List, utilizes the fact insertion in Linke
 
 ## Running Code
 
-
-    git clone https://github.com/Kartikei-12/Connect-N
+    git clone https://github.com/Kartikei-12/rex-sort
     cd rex-sort-master
     g++ -std=c++14 main.cpp -o main
     ./main

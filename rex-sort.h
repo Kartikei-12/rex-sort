@@ -35,37 +35,7 @@ class DoublyLinkedList
     int64_t size;
     DLL_Node_ptr head; DLL_Node_ptr mid;
     DLL_Node_ptr tail; DLL_Node_ptr last;
-    // void sort_insert_util_v1(
-    //     DLL_Node_ptr node,
-    //     DLL_Node_ptr start
-    // )
-    // {
-    //     while(start->get_data() <= node->get_data())
-    //         start = start->get_right();
-    //     if(start->get_data() <= node->get_data())
-    //         node->insert_in_between(start, start->get_right());
-    //     else
-    //         node->insert_in_between(start->get_left(), start);
-    // }
-    // void sort_insert_util_v2(
-    //     DLL_Node_ptr node,
-    //     DLL_Node_ptr start,
-    //     DLL_Node_ptr end
-    // )
-    // {
-    //     while(node->get_data() > start->get_data())
-    //             start = start->get_right();
-    //     while(node->get_data() < end->get_data())
-    //             end = end->get_left();
-    //     if(start == end)
-    //         if(start->get_data() < node->get_data() &&
-    //            start->get_right()->get_data() > node->get_data())
-    //             node->insert_in_between(start, start->get_right());
-    //         else
-    //             node->insert_in_between(start->get_left(), start);
-    //     else
-    //         node->insert_in_between(end, start);
-    // }
+    
     void sort_insert_util(
         DLL_Node_ptr node,
         DLL_Node_ptr start,
@@ -92,6 +62,8 @@ public:
         size(0),
         head(NULL), tail(NULL),
         mid(NULL), last(NULL) {;}
+    DLL_Node_ptr begin() { return head;}
+    DLL_Node_ptr end() { return tail;}
     // DoublyLinkedList(T_ list)
     // {
     //     if(list.size() < 3)
@@ -161,8 +133,10 @@ public:
     VEC compile_answer()
     {
         VEC ans;
-        ans.reserve(size);
         DLL_Node_ptr temp = head;
+        
+        ans.reserve(size);
+        
         while(temp != NULL)
         {
             ans.push_back(temp->get_data());
